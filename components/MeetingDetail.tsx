@@ -1,4 +1,5 @@
 import PrintProgramButton from '@/components/PrintProgramButton';
+import { formatMeetingDate } from '@/lib/meeting-dates';
 import type { SacramentMeeting } from '@/lib/types';
 
 interface MeetingDetailProps {
@@ -6,15 +7,12 @@ interface MeetingDetailProps {
 }
 
 export default function MeetingDetail({ meeting }: MeetingDetailProps) {
-  const formattedDate = new Date(`${meeting.date}T00:00:00`).toLocaleDateString(
-    'en-KE',
-    {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    },
-  );
+  const formattedDate = formatMeetingDate(meeting.date, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <article className="meeting-detail">

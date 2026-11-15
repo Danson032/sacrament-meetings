@@ -1,12 +1,4 @@
-
 export default function Header() {
-  const currentDate = new Date().toLocaleDateString('en-KE', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -27,10 +19,7 @@ export default function Header() {
             <p className="brand-ward">Meru Ward</p>
           </div>
         </div>
-
-        <p className="header-date">
-          {currentDate}
-        </p>
+        <p className="header-tagline">Browse and print meeting programs</p>
       </div>
     </header>
   );

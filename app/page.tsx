@@ -1,6 +1,12 @@
 
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
+import type { Metadata } from 'next';
+import { getPublicSiteUrl } from '@/lib/site-config';
+
+export const metadata: Metadata = {
+  ...(getPublicSiteUrl() ? { alternates: { canonical: '/' } } : {}),
+};
 
 export default function HomePage() {
   return (
@@ -10,13 +16,13 @@ export default function HomePage() {
           <p className="eyebrow">A thoughtful way to prepare</p>
 
           <h1 className="hero-title">
-            Plan meaningful meetings with confidence.
+            Review meaningful meetings with confidence.
           </h1>
 
           <p className="hero-description">
-            Organize and review sacrament meeting programs in one place.
-            Find schedules, hymns, speakers, prayers, and announcements
-            whenever you need them.
+            Browse sample sacrament meeting programs in one place. Review
+            schedules, hymns, speakers, prayers, and announcements, then print
+            a program when you need it.
           </p>
 
           <div className="hero-actions">
@@ -38,8 +44,8 @@ export default function HomePage() {
 
         <div className="hero-visual">
           <Image
-            src="https://www.thechurchnews.com/resizer/v2/QJZDGNMXNNBOXHJHAICM5HMK5M.jpeg?auth=50dbfd9900e3489476fe21edeb3d87fc18721f3a6ccb56b6057f2d577e5f5c21&focal=1026%2C533&width=800&height=533"
-            alt="Statue of Jesus Christ in a landscaped garden with flowers and palm trees"
+            src="/meeting-hero.svg"
+            alt="Illustration of a chapel among green hills beneath a calm evening sky"
             fill
             loading="eager"
             fetchPriority="high"
@@ -48,7 +54,9 @@ export default function HomePage() {
           />
           <div className="hero-caption">
             <p className="hero-caption-label">Meru Ward</p>
-            <p className="hero-caption-title">Gather, worship, and grow together.</p>
+            <p className="hero-caption-title">
+              Gather, worship, and grow together.
+            </p>
           </div>
         </div>
       </section>
@@ -56,10 +64,9 @@ export default function HomePage() {
       <section className="about-panel">
         <h2 className="section-title">About the Planner</h2>
         <p className="about-copy">
-          This application helps ward and branch leaders prepare
-          organized meeting agendas. Members can also access
-          current and previous meeting programs and print them
-          whenever needed.
+          Browse available meeting programs, review their agenda details, and
+          print a copy. The current programs are demonstration data; creating
+          or editing meetings and persistent storage are not yet available.
         </p>
       </section>
 
@@ -74,16 +81,16 @@ export default function HomePage() {
         <div className="feature-grid">
           {[
             {
-              title: 'Meeting Schedules',
-              description: 'Browse current and previous meeting records.',
+              title: 'Meeting Records',
+              description: 'Browse sample meeting schedules by date.',
             },
             {
-              title: 'Meeting Programs',
-              description: 'View hymns, prayers, speakers, and announcements.',
+              title: 'Program Details',
+              description: 'Review leaders, hymns, prayers, speakers, and announcements.',
             },
             {
               title: 'Print Programs',
-              description: 'Print meeting agendas for easy reference.',
+              description: 'Print a readable program for meeting-day reference.',
             },
           ].map((feature, index) => (
             <article key={feature.title} className="feature-card">

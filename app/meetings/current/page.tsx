@@ -2,7 +2,18 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import { redirect } from 'next/navigation';
 import { getMeetings } from '@/lib/meetings-db';
-import { getMostRecentSundayDate } from '@/lib/meeting-dates';
+import {
+  formatMeetingDate,
+  getMostRecentSundayDate,
+} from '@/lib/meeting-dates';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Current Meeting',
+  description:
+    'Find the sample meeting program scheduled for the current Sunday in Meru Ward.',
+  robots: { index: false, follow: true },
+};
 
 export default async function CurrentMeetingPage() {
   await connection();
@@ -14,16 +25,12 @@ export default async function CurrentMeetingPage() {
     redirect(`/meetings/${meeting.id}`);
   }
 
-  const formattedDate = new Date(`${sundayDate}T00:00:00Z`).toLocaleDateString(
-    'en-KE',
-    {
-      timeZone: 'Africa/Nairobi',
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    },
-  );
+  const formattedDate = formatMeetingDate(sundayDate, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <section

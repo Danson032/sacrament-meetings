@@ -1,26 +1,65 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import MeetingDetail from '@/components/MeetingDetail';
-import { getMeetingById } from '@/lib/meetings-db';
+import { formatMeetingDate } from '@/lib/meeting-dates';
+import { getMeetingById, getMeetings } from '@/lib/meetings-db';
+import { getPublicSiteUrl } from '@/lib/site-config';
 
 interface MeetingPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function MeetingPage({ params }: MeetingPageProps) {
-  const { id: rawId } = await params;
+export const dynamicParams = false;
 
+export function generateStaticParams(): { id: string }[] {
+  return getMeetings().map((meeting) => ({ id: String(meeting.id) }));
+}
+
+function parseMeetingId(rawId: string): number | null {
   if (!/^[1-9]\d*$/.test(rawId)) {
-    notFound();
+    return null;
   }
 
   const id = Number(rawId);
+  return Number.isSafeInteger(id) ? id : null;
+}
 
-  if (!Number.isSafeInteger(id)) {
-    notFound();
+export async function generateMetadata({
+  params,
+}: MeetingPageProps): Promise<Metadata> {
+  const { id: rawId } = await params;
+  const id = parseMeetingId(rawId);
+  const meeting = id === null ? null : getMeetingById(id);
+
+  if (!meeting) {
+    return {
+      title: 'Meeting Not Found',
+      description: 'The requested sacrament meeting program could not be found.',
+      robots: { index: false, follow: true },
+    };
   }
 
-  const meeting = getMeetingById(id);
+  const date = formatMeetingDate(meeting.date, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return {
+    title: `Meeting Program for ${date}`,
+    description: `View and print the Meru Ward sacrament meeting program for ${date}.`,
+    ...(getPublicSiteUrl()
+      ? { alternates: { canonical: `/meetings/${meeting.id}` } }
+      : {}),
+  };
+}
+
+export default async function MeetingPage({ params }: MeetingPageProps) {
+  const { id: rawId } = await params;
+  const id = parseMeetingId(rawId);
+
+  const meeting = id === null ? null : getMeetingById(id);
 
   if (!meeting) {
     notFound();

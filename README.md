@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sacrament Meeting Planner
 
-## Getting Started
+A Next.js application for browsing, reviewing, and printing sample sacrament
+meeting programs for Meru Ward. This is currently a read-only demonstration:
+meeting records are defined in source code and are not saved to a database.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Browse meeting programs and dates on the all-meetings page.
+- Review leaders, announcements, ward and stake business, hymns, prayers,
+  speakers, and musical numbers on a meeting detail page.
+- Open the current Sunday's program, calculated in the `Africa/Nairobi`
+  timezone, or see an empty state when no matching program exists.
+- Print a meeting program using a print-specific layout.
+- Use keyboard-accessible navigation, skip-to-content link, responsive layouts,
+  and clear empty, loading, not-found, and error states.
+- Read-only JSON endpoints for listing meetings and retrieving an individual
+  meeting, with validation for dates and IDs.
+
+There are no create, edit, or delete screens, user accounts, or persistent
+storage. The included records are demonstration data and must not be treated as
+an authoritative ward schedule.
+
+## Technology
+
+- Next.js 16 App Router and React 19
+- TypeScript with strict type checking
+- Tailwind CSS 4 (imported in the global stylesheet) and project-specific CSS
+- Geist loaded with `next/font`
+- Node.js built-in test runner (no additional test framework)
+
+The home, meeting list, and known sample-meeting detail pages are prerendered.
+The current-meeting page is rendered per request because it depends on the
+ward-local current date.
+
+## Project structure
+
+```text
+app/
+  api/meetings/             Read-only meeting API routes
+  meetings/                 Meeting list, current meeting, and detail pages
+  error.tsx                 Route error boundary
+  globals.css               Shared responsive and print styles
+  layout.tsx                Root layout and global metadata
+  not-found.tsx             Application-wide not-found page
+  robots.ts                 Robots policy
+  sitemap.ts                Sitemap for a configured public site URL
+components/                 Shared header, navigation, cards, and program UI
+lib/
+  meeting-dates.ts          Ward timezone, date validation, and formatting
+  meetings-api.ts           API response validation and status codes
+  meetings-db.ts            In-source demonstration meeting records
+  site-config.ts            Optional public site URL validation
+  types.ts                  Meeting data types
+public/                     Static assets, including the local hero illustration
+tests/                      Date and API helper tests
+spec.md                     Current implementation and product specification
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Requirements
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 22.6 or newer (the test command uses Node's built-in TypeScript
+  stripping support).
+- npm.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+No database, API key, or external service is required to run the application.
 
-## Learn More
+## Installation and development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment variables
 
-## Deploy on Vercel
+All environment variables are optional. Set `SITE_URL` to the absolute public
+site origin (for example, `https://ward.example.org`) to enable absolute
+canonical URLs and populate `sitemap.xml`. It must be an HTTP or HTTPS origin
+without a path, query, credentials, or fragment. Without it, the application
+still runs normally; canonical URLs and sitemap entries are omitted.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+SITE_URL=https://ward.example.org
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Do not commit `.env` files. Environment files are ignored by Git.
+
+## Checks and tests
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm test
+```
+
+The tests cover ward-local Sunday calculations, date validation and formatting,
+meeting filtering, API response codes for malformed IDs, unknown IDs, and
+invalid dates, and validation of the optional public site URL.
+
+## Production build and deployment
+
+Build and run the production server locally:
+
+```bash
+npm run build
+npm run start
+```
+
+The project uses the standard Next.js Node.js server output and can be deployed
+to Vercel using the repository's existing Next.js integration. Configure
+`SITE_URL` in the deployment environment if canonical URLs and the sitemap are
+desired. No database configuration is currently used.
+
+## API
+
+| Method and path | Behavior |
+| --- | --- |
+| `GET /api/meetings` | Return all sample records, newest first. |
+| `GET /api/meetings?date=YYYY-MM-DD` | Return records for a valid date, or an empty array when none match. Invalid dates return `400`. |
+| `GET /api/meetings/:id` | Return one record. Invalid or unsafe IDs return `400`; unknown positive IDs return `404`. |
+
+These endpoints are public, read-only, and backed by the same in-source sample
+records as the pages. The robots policy discourages indexing `/api/`, but that
+is not an access-control mechanism.
+
+## Limitations and future work
+
+- Replace the demonstration records with approved meeting information and a
+  persistent data store.
+- Add meeting creation, editing, deletion, and server-side validation.
+- Add authentication and authorization before exposing real or personal
+  meeting information or write operations.
+- Consider calendar, search/filter, reusable templates, and dedicated PDF
+  export after the required workflows are agreed.
+- Add integration/browser tests and accessibility/performance measurements as
+  the application grows.

@@ -1,5 +1,16 @@
 import MeetingCard from '@/components/MeetingCard';
 import { getMeetings } from '@/lib/meetings-db';
+import { getPublicSiteUrl } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'All Meetings',
+  description:
+    'Browse sample sacrament meeting programs and schedules for Meru Ward.',
+  ...(getPublicSiteUrl()
+    ? { alternates: { canonical: '/meetings' } }
+    : {}),
+};
 
 export default function MeetingsPage() {
   const meetings = getMeetings();

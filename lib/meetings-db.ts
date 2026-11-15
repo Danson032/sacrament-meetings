@@ -171,17 +171,15 @@ const meetings: SacramentMeeting[] = [
 ];
 
 export function getMeetings(
-    date?: string | null
+    date?: string | null,
 ): SacramentMeeting[] {
-    if (date !== undefined && date !== null) {
-        return meetings.filter((meeting) => meeting.date === date);
-    }
-
-    return meetings;
+  return meetings
+    .filter((meeting) => date == null || meeting.date === date)
+    .sort((first, second) => second.date.localeCompare(first.date));
 }
 
 export function getMeetingById(
-    id: number
+  id: number,
 ): SacramentMeeting | null {
-    return meetings.find((meeting) => meeting.id === id) ?? null;
+  return meetings.find((meeting) => meeting.id === id) ?? null;
 }

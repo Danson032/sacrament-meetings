@@ -1,8 +1,14 @@
-import { getMeetings } from '@/lib/meetings-db';
+import { getMeetingsResponse } from '@/lib/meetings-api';
 
 export function GET(request: Request): Response {
-  const date = new URL(request.url).searchParams.get('date');
-  const meetings = date === null ? getMeetings() : getMeetings(date);
+  const dateParams = new URL(request.url).searchParams.getAll('date');
 
-  return Response.json(meetings);
+  if (dateParams.length > 1) {
+    return Response.json(
+      { error: 'Provide the date parameter only once.' },
+      { status: 400 },
+    );
+  }
+
+  return getMeetingsResponse(dateParams[0] ?? null);
 }

@@ -2,7 +2,9 @@ import type { MetadataRoute } from 'next';
 import { getMeetings } from '@/lib/meetings-db';
 import { getPublicSiteUrl } from '@/lib/site-config';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = 'force-dynamic';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getPublicSiteUrl();
 
   if (!siteUrl) {
@@ -10,7 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
 
   const publicPages = ['/', '/meetings'];
-  const meetingPages = getMeetings().map(
+  const meetingPages = (await getMeetings()).map(
     (meeting) => `/meetings/${meeting.id}`,
   );
 

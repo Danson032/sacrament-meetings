@@ -10,5 +10,5 @@ export async function GET(
 ): Promise<Response> {
   const { id } = await params;
 
-  return getMeetingResponse(id);
+  return await getMeetingResponse(id);
 }

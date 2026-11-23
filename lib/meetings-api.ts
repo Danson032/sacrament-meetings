@@ -1,7 +1,10 @@
 import { isValidMeetingDate } from './meeting-dates.ts';
 import { getMeetingById, getMeetings } from './meetings-db.ts';
 
-export function getMeetingsResponse(date: string | null): Response {
+export async function getMeetingsResponse(
+  date: string | null,
+  findMeetings: typeof getMeetings = getMeetings,
+): Promise<Response> {
   if (date !== null && !isValidMeetingDate(date)) {
     return Response.json(
       { error: 'Date must be a valid calendar date in YYYY-MM-DD format.' },
@@ -9,10 +12,13 @@ export function getMeetingsResponse(date: string | null): Response {
     );
   }
 
-  return Response.json(getMeetings(date));
+  return Response.json(await findMeetings(date));
 }
 
-export function getMeetingResponse(rawId: string): Response {
+export async function getMeetingResponse(
+  rawId: string,
+  findMeeting: typeof getMeetingById = getMeetingById,
+): Promise<Response> {
   if (!/^[1-9]\d*$/.test(rawId)) {
     return Response.json(
       { error: 'Meeting ID must be a positive integer.' },
@@ -29,7 +35,7 @@ export function getMeetingResponse(rawId: string): Response {
     );
   }
 
-  const meeting = getMeetingById(id);
+  const meeting = await findMeeting(id);
 
   if (!meeting) {
     return Response.json(

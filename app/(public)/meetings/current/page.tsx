@@ -19,7 +19,7 @@ export default async function CurrentMeetingPage() {
   await connection();
 
   const sundayDate = getMostRecentSundayDate(new Date());
-  const [meeting] = getMeetings(sundayDate);
+  const [meeting] = await getMeetings(sundayDate);
 
   if (meeting) {
     redirect(`/meetings/${meeting.id}`);

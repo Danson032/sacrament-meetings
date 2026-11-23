@@ -66,7 +66,7 @@ export default function HomePage() {
         <p className="about-copy">
           Browse available meeting programs, review their agenda details, and
           print a copy. The current programs are demonstration data; creating
-          or editing meetings and persistent storage are not yet available.
+          or editing meetings is not available.
         </p>
       </section>
 

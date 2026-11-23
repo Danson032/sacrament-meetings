@@ -1,6 +1,6 @@
 import { getMeetingsResponse } from '@/lib/meetings-api';
 
-export function GET(request: Request): Response {
+export async function GET(request: Request): Promise<Response> {
   const dateParams = new URL(request.url).searchParams.getAll('date');
 
   if (dateParams.length > 1) {
@@ -10,5 +10,5 @@ export function GET(request: Request): Response {
     );
   }
 
-  return getMeetingsResponse(dateParams[0] ?? null);
+  return await getMeetingsResponse(dateParams[0] ?? null);
 }

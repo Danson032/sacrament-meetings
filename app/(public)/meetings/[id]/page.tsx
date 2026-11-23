@@ -3,17 +3,11 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import MeetingDetail from '@/components/MeetingDetail';
 import { formatMeetingDate } from '@/lib/meeting-dates';
-import { getMeetingById, getMeetings } from '@/lib/meetings-db';
+import { getMeetingById } from '@/lib/meetings-db';
 import { getPublicSiteUrl } from '@/lib/site-config';
 
 interface MeetingPageProps {
   params: Promise<{ id: string }>;
-}
-
-export const dynamicParams = false;
-
-export function generateStaticParams(): { id: string }[] {
-  return getMeetings().map((meeting) => ({ id: String(meeting.id) }));
 }
 
 function parseMeetingId(rawId: string): number | null {
@@ -30,7 +24,7 @@ export async function generateMetadata({
 }: MeetingPageProps): Promise<Metadata> {
   const { id: rawId } = await params;
   const id = parseMeetingId(rawId);
-  const meeting = id === null ? null : getMeetingById(id);
+  const meeting = id === null ? null : await getMeetingById(id);
 
   if (!meeting) {
     return {
@@ -59,7 +53,7 @@ export default async function MeetingPage({ params }: MeetingPageProps) {
   const { id: rawId } = await params;
   const id = parseMeetingId(rawId);
 
-  const meeting = id === null ? null : getMeetingById(id);
+  const meeting = id === null ? null : await getMeetingById(id);
 
   if (!meeting) {
     notFound();

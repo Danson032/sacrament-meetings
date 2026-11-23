@@ -5,12 +5,12 @@
 The Sacrament Meeting Planner is a Next.js web application for browsing,
 reviewing, and printing sacrament meeting programs for Meru Ward. The current
 application is a **read-only demonstration**, not a complete meeting-management
-system. It uses five meeting records defined in source code; it has no database
-or persistent writes.
+system. It uses five sample records seeded into Neon PostgreSQL and accepts no
+user writes.
 
 This specification distinguishes implemented behavior from partial capabilities
 and future product requirements. It reflects the code in this repository as of
-2026-11-15.
+2026-11-19.
 
 ## 2. Intended users and problem
 
@@ -31,9 +31,10 @@ programs.
 - **`/` — Home:** Describes the current read-only planner and links to all
   meetings and the current-meeting view.
 - **`/meetings` — All meetings:** Lists sample meetings in descending date
-  order. Each card shows the date, meeting type, presiding and conducting
-  leaders, opening hymn, and a link to the detail page. An empty state is
-  available if there are no records.
+  order, five per page. Search matches date, meeting type, presiding and
+  conducting leaders, and speaker names; the search is retained across pages.
+  Each card shows the date, meeting type, leaders, opening hymn, and a link to
+  the detail page. Empty results and invalid page numbers are handled.
 - **`/meetings/[id]` — Meeting detail:** Displays the meeting date and type,
   leaders, announcements, ward and stake business, hymns, prayers, speakers,
   and musical numbers. Invalid and unknown IDs use a not-found page.
@@ -42,10 +43,8 @@ programs.
   date. If none exists, it explains that no program is available and links to
   all meetings.
 
-The sample records currently cover 2026-10-11 through 2026-11-08. As of the
-date of this specification, no record exists for 2026-11-15, so the current
-meeting route shows its empty state. This changes only when the source data is
-updated.
+The sample records currently cover 2026-10-11 through 2026-11-08. No record
+exists for 2026-11-15, so the current-meeting route shows its empty state.
 
 ### Printing and shared interface
 
@@ -78,16 +77,12 @@ not create, update, or delete records.
 - **Meeting planning:** Programs can be reviewed and printed, but no form or
   workflow exists to prepare, save, change, or remove a program.
 - **Current meeting selection:** The route applies a ward-local Sunday date
-  calculation and exact-date lookup. Its result is only as current as the
-  sample records in source code.
-- **Date filtering:** The API can filter records by date, but the web interface
-  has no date filter or search controls.
-- **Data integrity:** API query values and route IDs are validated. The
-  demonstration records are trusted source data; there is no persistence-layer
-  validation, migration, or transaction behavior.
+  calculation and exact-date lookup against the database-seeded sample records.
+- **Data integrity:** API query values and route IDs are validated. Table
+  creation and sample seeding are idempotent; schema migrations and
+  persistence-layer validation are not implemented.
 - **Loading state:** A route-level loading fallback is provided for navigation
-  while meeting routes render. The current data access is synchronous and
-  in-memory, so a noticeable loading period is not expected.
+  while asynchronous database-backed meeting routes render.
 - **SEO configuration:** Page metadata is present. `SITE_URL` enables canonical
   URLs where defined and absolute sitemap links. Without that setting, no
   deployment-specific host is invented and the sitemap has no entries.
@@ -95,9 +90,9 @@ not create, update, or delete records.
 ## 5. Not implemented
 
 - Meeting creation, editing, deletion, or other write operations.
-- Database persistence, backup, migrations, or cross-instance state.
+- Database backups, migrations, or recovery procedures.
 - User accounts, authentication, authorization, and role-based permissions.
-- Calendar views, date search, text search, or filters in the user interface.
+- Calendar views or advanced filters beyond meeting text search.
 - Sharing, notifications, approval workflows, or participant invitations.
 - A generated PDF or document export; printing uses the browser.
 - Localization beyond the current English interface and Kenya locale date
@@ -127,12 +122,11 @@ decisions and implementation:
 2. Define editable program fields, required values, validation, and agenda
    ordering rules.
 3. Add authorized create, read, update, and delete operations.
-4. Persist data with an agreed database, schema, migration, backup, and recovery
-   strategy.
+4. Define database schema migrations, backup, and recovery procedures.
 5. Add authentication and server-side authorization before storing real
    participant information or allowing writes.
-6. Confirm whether calendar, search, sharing, notifications, or export features
-   are needed.
+6. Confirm whether calendar, advanced filters, sharing, notifications, or export
+   features are needed.
 
 ## 7. Non-functional requirements
 
@@ -174,23 +168,27 @@ decisions and implementation:
 - Next.js App Router with server-rendered pages and route handlers.
 - React Server Components are used by default. Client Components are limited
   to pathname-aware navigation, browser printing, and the error boundary.
-- The home, meeting list, and known sample-meeting detail routes are
-  prerendered at build time. The current-meeting route is rendered per request
-  because it depends on the current ward-local date. Unknown sample IDs return
-  a framework-level 404.
-- Meeting pages read directly from `lib/meetings-db.ts`; API route handlers use
-  shared response helpers in `lib/meetings-api.ts`.
+- Public routes are organized under `app/(public)/`; API route handlers are
+  organized under `app/(api)/` without changing their public paths.
+- Meeting pages and API handlers use asynchronous operations in the
+  server-side `lib/meetings-db.ts`; API responses use shared validation helpers
+  in `lib/meetings-api.ts`.
+- The Neon data layer reads `DATABASE_URL`, falling back to `POSTGRES_URL`,
+  creates the `meetings` table and date index if missing, and inserts the five
+  original sample records with conflict-safe seeding. Nested meeting fields
+  are stored in JSONB. Credentials are only read in server code.
 - `lib/meeting-dates.ts` contains ward-timezone Sunday calculation, strict
   ISO-calendar-date validation, and timezone-stable formatting.
 - Shared UI lives under `components/`; global responsive and print styles live
   in `app/globals.css`.
-- Data is a hardcoded in-process TypeScript array. It is not a database and
-  cannot preserve user changes.
+- The five records remain as idempotent seed data; reads are served from Neon.
+  The application exposes no meeting writes.
 
 ### Technology
 
 - Next.js 16.4.6
 - React and React DOM 19.3.0
+- Neon PostgreSQL via `@neondatabase/serverless`
 - TypeScript 5 with strict type checking
 - Tailwind CSS 4.3.3 imported by the global stylesheet, alongside custom CSS
 - Geist via `next/font`
@@ -202,8 +200,8 @@ decisions and implementation:
 
 ```text
 app/
-  api/meetings/             Read-only JSON route handlers
-  meetings/                 List, current, detail, loading, and not-found UI
+  (api)/api/meetings/        Read-only JSON route handlers
+  (public)/                  Home, list, current, detail, loading, and not-found UI
   error.tsx                 Shared route error boundary
   globals.css               Global, responsive, and print styles
   layout.tsx                Root layout and metadata
@@ -211,35 +209,33 @@ app/
   robots.ts                 Robots instructions
   sitemap.ts                Sitemap based on SITE_URL
 components/                 Shared site and meeting UI
-lib/                        Date, data, API, site-config, and type helpers
+lib/                        Date, Neon data, pagination, API, and site helpers
 public/                     Static images and starter assets
 tests/                      Date and API helper tests
 ```
 
 ## 9. Data and security constraints
 
-- The meeting records are bundled in the source file `lib/meetings-db.ts`.
-  Reads are served from process memory; no user changes are accepted or
-  persisted.
+- The five sample records are seeded by `lib/meetings-db.ts`; meeting reads are
+  served from Neon. No user changes are accepted.
 - Current names and program details are included as sample records. Confirm
   that any real names or details are approved for public display before using
   this project with actual ward data.
 - The pages and API have no authentication. Do not treat robots rules or
   obscurity of numeric IDs as privacy controls.
-- No database, credentials, or external runtime service is currently required.
+- Database credentials are configured only through server-side
+  `DATABASE_URL` or `POSTGRES_URL` variables.
 - `.env*`, build output, and dependency folders are Git-ignored.
 - `SITE_URL` is an optional absolute public HTTP or HTTPS origin. It is used
   only for metadata and sitemap generation and is not a secret.
 
-### Future persistence architecture
+### Future database and access controls
 
-When persistence is approved, replace the hardcoded data module with a
-server-only data-access layer that defines the operations needed by pages and
-route handlers. Add a validated schema, migrations, and integration tests.
-Keep credentials in server-side environment variables and perform
-authentication, authorization, and input validation at the server trust
-boundary. Select a database and hosting arrangement only after the team
-confirms requirements; this specification does not assume a paid provider.
+Before using this project with real meeting information, confirm privacy and
+access requirements. Add schema migrations, backup and recovery procedures,
+and integration tests as needed. Keep credentials in server-side environment
+variables and perform authentication, authorization, and input validation at
+the server trust boundary before adding write operations.
 
 ## 10. Verification
 
@@ -253,18 +249,17 @@ npm run build
 ```
 
 Automated tests cover ward-local Sunday boundaries, year changes, date
-validation and formatting, sample record ordering and filtering, API responses
-for invalid IDs, unknown IDs, and invalid dates, and optional site URL
-validation. Browser-based accessibility and Lighthouse audits are not
-currently automated.
+validation and formatting, page parsing and clamping, API responses for invalid
+IDs, unknown IDs, and invalid dates, and optional site URL validation.
+Browser-based accessibility and Lighthouse audits are not currently automated.
 
 ## 11. Expected future improvements
 
 1. Agree on the user roles, workflows, privacy needs, and success criteria.
-2. Replace demonstration records with approved data and persistent storage.
+2. Replace or supplement demonstration records with approved meeting data.
 3. Implement validated meeting management and enforce authorization on the
    server.
 4. Add integration and browser tests for complete user workflows.
 5. Measure and improve accessibility and performance against explicit targets.
-6. Add search, calendar, reusable templates, sharing, or export only if
-   confirmed as requirements.
+6. Add advanced search, calendar, reusable templates, sharing, or export only
+   if confirmed as requirements.

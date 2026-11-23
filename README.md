@@ -1,12 +1,14 @@
 # Sacrament Meeting Planner
 
 A Next.js application for browsing, reviewing, and printing sample sacrament
-meeting programs for Meru Ward. This is currently a read-only demonstration:
-meeting records are defined in source code and are not saved to a database.
+meeting programs for Meru Ward. This is a read-only planner backed by Neon
+PostgreSQL and seeded with five sample meeting records.
 
 ## Features
 
 - Browse meeting programs and dates on the all-meetings page.
+- Search by meeting date, type, presiding or conducting leader, and speaker;
+  browse results five meetings per page.
 - Review leaders, announcements, ward and stake business, hymns, prayers,
   speakers, and musical numbers on a meeting detail page.
 - Open the current Sunday's program, calculated in the `Africa/Nairobi`
@@ -17,28 +19,28 @@ meeting records are defined in source code and are not saved to a database.
 - Read-only JSON endpoints for listing meetings and retrieving an individual
   meeting, with validation for dates and IDs.
 
-There are no create, edit, or delete screens, user accounts, or persistent
-storage. The included records are demonstration data and must not be treated as
-an authoritative ward schedule.
+There are no create, edit, or delete screens or user accounts. The included
+records are demonstration data and must not be treated as an authoritative
+ward schedule.
 
 ## Technology
 
 - Next.js 16 App Router and React 19
+- Neon PostgreSQL via `@neondatabase/serverless`
 - TypeScript with strict type checking
 - Tailwind CSS 4 (imported in the global stylesheet) and project-specific CSS
 - Geist loaded with `next/font`
 - Node.js built-in test runner (no additional test framework)
 
-The home, meeting list, and known sample-meeting detail pages are prerendered.
-The current-meeting page is rendered per request because it depends on the
-ward-local current date.
+Database-backed meeting pages and APIs are rendered per request. The
+current-meeting page also depends on the ward-local current date.
 
 ## Project structure
 
 ```text
 app/
-  api/meetings/             Read-only meeting API routes
-  meetings/                 Meeting list, current meeting, and detail pages
+  (api)/api/meetings/        Read-only meeting API routes
+  (public)/                  Home, meetings list, current, and detail pages
   error.tsx                 Route error boundary
   globals.css               Shared responsive and print styles
   layout.tsx                Root layout and global metadata
@@ -49,7 +51,8 @@ components/                 Shared header, navigation, cards, and program UI
 lib/
   meeting-dates.ts          Ward timezone, date validation, and formatting
   meetings-api.ts           API response validation and status codes
-  meetings-db.ts            In-source demonstration meeting records
+  meetings-db.ts            Neon access, schema initialization, and sample seeding
+  meeting-pagination.ts     Search-list page size and page validation
   site-config.ts            Optional public site URL validation
   types.ts                  Meeting data types
 public/                     Static assets, including the local hero illustration
@@ -63,7 +66,9 @@ spec.md                     Current implementation and product specification
   stripping support).
 - npm.
 
-No database, API key, or external service is required to run the application.
+A Neon PostgreSQL connection is required to run the application. In Vercel,
+use the existing Neon integration and provide its connection string through
+the server-side environment.
 
 ## Installation and development
 
@@ -76,17 +81,26 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment variables
 
-All environment variables are optional. Set `SITE_URL` to the absolute public
-site origin (for example, `https://ward.example.org`) to enable absolute
-canonical URLs and populate `sitemap.xml`. It must be an HTTP or HTTPS origin
-without a path, query, credentials, or fragment. Without it, the application
-still runs normally; canonical URLs and sitemap entries are omitted.
+Set `DATABASE_URL` to the Neon connection string, or use `POSTGRES_URL` as a
+fallback. These are server-side variables and must not use a `NEXT_PUBLIC_`
+prefix. The application creates the `meetings` table and date index if needed,
+then inserts the five sample records with `ON CONFLICT DO NOTHING`, so
+initialization and repeated requests do not overwrite existing records. In
+Vercel, make sure the existing Neon connection is exposed as one of these
+variables.
+
+Set `SITE_URL` to the absolute public site origin (for example,
+`https://ward.example.org`) to enable absolute canonical URLs and populate
+`sitemap.xml`. It must be an HTTP or HTTPS origin without a path, query,
+credentials, or fragment. Without it, canonical URLs and sitemap entries are
+omitted.
 
 ```text
+DATABASE_URL=postgresql://...
 SITE_URL=https://ward.example.org
 ```
 
-Do not commit `.env` files. Environment files are ignored by Git.
+Do not commit `.env` files or expose database credentials to client code.
 
 ## Checks and tests
 
@@ -94,11 +108,12 @@ Do not commit `.env` files. Environment files are ignored by Git.
 npm run lint
 npx tsc --noEmit
 npm test
+npm run build
 ```
 
 The tests cover ward-local Sunday calculations, date validation and formatting,
-meeting filtering, API response codes for malformed IDs, unknown IDs, and
-invalid dates, and validation of the optional public site URL.
+pagination parsing and bounds, API response codes for malformed IDs, unknown
+IDs, and invalid dates, and validation of the optional public site URL.
 
 ## Production build and deployment
 
@@ -111,8 +126,9 @@ npm run start
 
 The project uses the standard Next.js Node.js server output and can be deployed
 to Vercel using the repository's existing Next.js integration. Configure
-`SITE_URL` in the deployment environment if canonical URLs and the sitemap are
-desired. No database configuration is currently used.
+`DATABASE_URL` (or `POSTGRES_URL`) in the deployment environment for Neon, and
+configure `SITE_URL` if canonical URLs and the sitemap are desired. Keep
+database variables server-side.
 
 ## API
 
@@ -122,14 +138,12 @@ desired. No database configuration is currently used.
 | `GET /api/meetings?date=YYYY-MM-DD` | Return records for a valid date, or an empty array when none match. Invalid dates return `400`. |
 | `GET /api/meetings/:id` | Return one record. Invalid or unsafe IDs return `400`; unknown positive IDs return `404`. |
 
-These endpoints are public, read-only, and backed by the same in-source sample
-records as the pages. The robots policy discourages indexing `/api/`, but that
-is not an access-control mechanism.
+These endpoints are public, read-only, and backed by the same Neon records as
+the pages. The robots policy discourages indexing `/api/`, but that is not an
+access-control mechanism.
 
 ## Limitations and future work
 
-- Replace the demonstration records with approved meeting information and a
-  persistent data store.
 - Add meeting creation, editing, deletion, and server-side validation.
 - Add authentication and authorization before exposing real or personal
   meeting information or write operations.

@@ -69,7 +69,7 @@ export default async function MeetingsPage({
             className="meeting-search-input"
             type="search"
             name="q"
-            value={searchTerm}
+            defaultValue={searchTerm}
             placeholder="Search by date, type, leader, or speaker"
           />
           <button className="button button-primary" type="submit">
@@ -104,7 +104,10 @@ export default async function MeetingsPage({
               ) : (
                 <span aria-hidden="true" />
               )}
-              <span aria-current="page">
+              <span
+                aria-current="page"
+                aria-label={`Current page, ${currentPage} of ${totalPages}`}
+              >
                 Page {currentPage} of {totalPages}
               </span>
               {currentPage < totalPages ? (

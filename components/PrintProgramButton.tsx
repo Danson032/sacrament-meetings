@@ -6,6 +6,7 @@ export default function PrintProgramButton() {
       type="button"
       onClick={() => window.print()}
       className="button button-primary"
+      aria-label="Print this sacrament meeting program"
     >
       Print Meeting Program
     </button>

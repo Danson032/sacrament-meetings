@@ -1,8 +1,8 @@
 # Sacrament Meeting Planner
 
-A Next.js application for browsing, reviewing, and printing sample sacrament
-meeting programs for Meru Ward. This is a read-only planner backed by Neon
-PostgreSQL and seeded with five sample meeting records.
+A Next.js application for browsing, managing, reviewing, and printing sample
+sacrament meeting programs for Meru Ward. It is backed by Neon PostgreSQL and
+seeded with five sample meeting records.
 
 ## Features
 
@@ -11,6 +11,7 @@ PostgreSQL and seeded with five sample meeting records.
   browse results five meetings per page.
 - Review leaders, announcements, ward and stake business, hymns, prayers,
   speakers, and musical numbers on a meeting detail page.
+- Create, edit, and delete meeting programs with server-side validation.
 - Open the current Sunday's program, calculated in the `Africa/Nairobi`
   timezone, or see an empty state when no matching program exists.
 - Print a meeting program using a print-specific layout.
@@ -19,9 +20,9 @@ PostgreSQL and seeded with five sample meeting records.
 - Read-only JSON endpoints for listing meetings and retrieving an individual
   meeting, with validation for dates and IDs.
 
-There are no create, edit, or delete screens or user accounts. The included
-records are demonstration data and must not be treated as an authoritative
-ward schedule.
+The included records are demonstration data and must not be treated as an
+authoritative ward schedule. Management actions do not have authentication;
+add authentication and authorization before using them with real ward data.
 
 ## Technology
 
@@ -40,16 +41,19 @@ current-meeting page also depends on the ward-local current date.
 ```text
 app/
   (api)/api/meetings/        Read-only meeting API routes
-  (public)/                  Home, meetings list, current, and detail pages
-  error.tsx                 Route error boundary
+  (public)/                  Home, meeting CRUD, current, and detail pages
+  (public)/meetings/error.tsx Meeting route error boundary
   globals.css               Shared responsive and print styles
   layout.tsx                Root layout and global metadata
   not-found.tsx             Application-wide not-found page
   robots.ts                 Robots policy
   sitemap.ts                Sitemap for a configured public site URL
-components/                 Shared header, navigation, cards, and program UI
+components/                 Shared navigation, cards, meeting forms, and program UI
 lib/
+  actions.ts                Validated meeting Server Actions
   meeting-dates.ts          Ward timezone, date validation, and formatting
+  meeting-form-state.ts     Shared form action state
+  meeting-validation.ts     Zod meeting form schema and parsing
   meetings-api.ts           API response validation and status codes
   meetings-db.ts            Neon access, schema initialization, and sample seeding
   meeting-pagination.ts     Search-list page size and page validation
@@ -85,9 +89,9 @@ Set `DATABASE_URL` to the Neon connection string, or use `POSTGRES_URL` as a
 fallback. These are server-side variables and must not use a `NEXT_PUBLIC_`
 prefix. The application creates the `meetings` table and date index if needed,
 then inserts the five sample records with `ON CONFLICT DO NOTHING`, so
-initialization and repeated requests do not overwrite existing records. In
-Vercel, make sure the existing Neon connection is exposed as one of these
-variables.
+initialization and repeated requests do not overwrite existing records. It
+also creates an ID sequence for newly created meetings. In Vercel, make sure
+the existing Neon connection is exposed as one of these variables.
 
 Set `SITE_URL` to the absolute public site origin (for example,
 `https://ward.example.org`) to enable absolute canonical URLs and populate
@@ -112,8 +116,8 @@ npm run build
 ```
 
 The tests cover ward-local Sunday calculations, date validation and formatting,
-pagination parsing and bounds, API response codes for malformed IDs, unknown
-IDs, and invalid dates, and validation of the optional public site URL.
+pagination parsing and bounds, API response codes for malformed IDs and dates,
+meeting form validation, and validation of the optional public site URL.
 
 ## Production build and deployment
 
@@ -144,7 +148,6 @@ access-control mechanism.
 
 ## Limitations and future work
 
-- Add meeting creation, editing, deletion, and server-side validation.
 - Add authentication and authorization before exposing real or personal
   meeting information or write operations.
 - Consider calendar, search/filter, reusable templates, and dedicated PDF

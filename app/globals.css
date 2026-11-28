@@ -243,6 +243,118 @@ button {
   outline-offset: 3px;
 }
 
+.meeting-create-action {
+  margin-top: 20px;
+}
+
+.meeting-form {
+  display: grid;
+  width: 100%;
+  max-width: 820px;
+  gap: 18px;
+}
+
+.meeting-form-section {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+  margin: 0;
+  padding: clamp(18px, 3vw, 26px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.meeting-form-section legend {
+  padding-inline: 8px;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.meeting-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.meeting-form-field {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 6px;
+}
+
+.meeting-form-field-wide {
+  grid-column: 1 / -1;
+}
+
+.meeting-form-field label {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.meeting-form-field input,
+.meeting-form-field select,
+.meeting-form-field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.meeting-form-field textarea {
+  min-height: auto;
+  resize: vertical;
+}
+
+.meeting-form-field input:focus-visible,
+.meeting-form-field select:focus-visible,
+.meeting-form-field textarea:focus-visible {
+  outline: 3px solid #8c692f;
+  outline-offset: 2px;
+}
+
+.meeting-form-field [aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.meeting-form-hint,
+.meeting-form-error {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.meeting-form-hint {
+  color: var(--muted);
+}
+
+.meeting-form-error {
+  color: #b42318;
+}
+
+.meeting-form-message:empty {
+  display: none;
+}
+
+.meeting-form-actions,
+.meeting-detail-management {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .meeting-results-count {
   margin: -14px 0 0;
   color: var(--muted);
@@ -287,7 +399,7 @@ button {
 }
 
 .meeting-list-grid .meeting-card-action {
-  margin-top: auto;
+  margin-top: 0;
 }
 
 @media (max-width: 900px) {
@@ -651,6 +763,37 @@ button {
   margin-top: 23px;
 }
 
+.meeting-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.meeting-card-actions .meeting-card-action {
+  margin-top: 0;
+}
+
+.meeting-delete-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.button-danger {
+  border-color: #b42318;
+  background: #b42318;
+  color: #fff;
+}
+
+.button-danger:hover {
+  border-color: #8f1d14;
+  background: #8f1d14;
+}
+
 .meeting-detail {
   max-width: 820px;
   margin-inline: auto;
@@ -886,6 +1029,10 @@ button {
 
   .meeting-search-controls {
     align-items: stretch;
+  }
+
+  .meeting-form-grid {
+    grid-template-columns: 1fr;
   }
 
   .meeting-search-input {

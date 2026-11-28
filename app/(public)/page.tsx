@@ -64,9 +64,9 @@ export default function HomePage() {
       <section className="about-panel">
         <h2 className="section-title">About the Planner</h2>
         <p className="about-copy">
-          Browse available meeting programs, review their agenda details, and
-          print a copy. The current programs are demonstration data; creating
-          or editing meetings is not available.
+          Browse available meeting programs, create and update schedules,
+          review agenda details, and print a copy. The included meetings start
+          as demonstration records and changes are saved to the database.
         </p>
       </section>
 
@@ -82,7 +82,7 @@ export default function HomePage() {
           {[
             {
               title: 'Meeting Records',
-              description: 'Browse sample meeting schedules by date.',
+              description: 'Browse and manage meeting schedules by date.',
             },
             {
               title: 'Program Details',

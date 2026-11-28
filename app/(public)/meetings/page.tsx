@@ -57,6 +57,9 @@ export default async function MeetingsPage({
           Browse available meeting programs, including schedules, hymns,
           speakers, prayers, and announcements.
         </p>
+        <Link href="/meetings/new" className="button button-primary meeting-create-action">
+          Create Meeting
+        </Link>
       </header>
 
       <form className="meeting-search" action="/meetings" method="get">
@@ -69,7 +72,7 @@ export default async function MeetingsPage({
             className="meeting-search-input"
             type="search"
             name="q"
-            value={searchTerm}
+            defaultValue={searchTerm}
             placeholder="Search by date, type, leader, or speaker"
           />
           <button className="button button-primary" type="submit">
@@ -104,7 +107,10 @@ export default async function MeetingsPage({
               ) : (
                 <span aria-hidden="true" />
               )}
-              <span aria-current="page">
+              <span
+                aria-current="page"
+                aria-label={`Current page, ${currentPage} of ${totalPages}`}
+              >
                 Page {currentPage} of {totalPages}
               </span>
               {currentPage < totalPages ? (

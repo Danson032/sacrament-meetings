@@ -1,6 +1,7 @@
 import PrintProgramButton from '@/components/PrintProgramButton';
 import { formatMeetingDate } from '@/lib/meeting-dates';
 import type { SacramentMeeting } from '@/lib/types';
+import Link from 'next/link';
 
 interface MeetingDetailProps {
   meeting: SacramentMeeting;
@@ -24,6 +25,15 @@ export default function MeetingDetail({ meeting }: MeetingDetailProps) {
         <p className="meeting-detail-date">{formattedDate}</p>
         <p className="meeting-detail-type">{meeting.meetingType} Meeting</p>
       </header>
+
+      <div className="meeting-detail-management print-hidden">
+        <Link
+          className="button button-secondary"
+          href={`/meetings/${meeting.id}/edit`}
+        >
+          Edit Meeting
+        </Link>
+      </div>
 
       <div className="meeting-leaders">
         <div className="leader-item">

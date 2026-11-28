@@ -216,6 +216,11 @@ async function initializeDatabase(
     CREATE INDEX IF NOT EXISTS meetings_date_idx
     ON meetings (date DESC, id)
   `;
+  await sql`CREATE SEQUENCE IF NOT EXISTS meetings_id_seq`;
+  await sql`
+    ALTER TABLE meetings
+    ALTER COLUMN id SET DEFAULT nextval('meetings_id_seq')
+  `;
 
   await Promise.all(
     sampleMeetings.map((meeting) => {
@@ -244,6 +249,15 @@ async function initializeDatabase(
       `;
     }),
   );
+  await sql`
+    SELECT setval(
+      'meetings_id_seq',
+      GREATEST(
+        COALESCE((SELECT MAX(id) FROM meetings), 1),
+        (SELECT last_value FROM meetings_id_seq)
+      )
+    )
+  `;
 }
 
 async function getDatabase() {
@@ -380,6 +394,64 @@ export async function getMeetingById(
   `;
 
   return rows[0] ? mapMeeting(rows[0]) : null;
+}
+
+export async function insertMeeting(
+  meeting: Omit<SacramentMeeting, 'id'>,
+): Promise<SacramentMeeting> {
+  const sql = await getDatabase();
+  const { date, meetingType, presiding, conducting, ...details } = meeting;
+  const rows: Record<string, unknown>[] = await sql`
+    INSERT INTO meetings (
+      date, meeting_type, presiding, conducting, details
+    )
+    VALUES (
+      ${date}::date,
+      ${meetingType},
+      ${presiding},
+      ${conducting},
+      ${JSON.stringify(details)}::jsonb
+    )
+    RETURNING id, date::text AS date, meeting_type, presiding, conducting, details
+  `;
+
+  if (!rows[0]) {
+    throw new Error('The meeting insert did not return a record.');
+  }
+
+  return mapMeeting(rows[0]);
+}
+
+export async function updateMeetingRecord(
+  id: number,
+  meeting: Omit<SacramentMeeting, 'id'>,
+): Promise<boolean> {
+  const sql = await getDatabase();
+  const { date, meetingType, presiding, conducting, ...details } = meeting;
+  const rows: Record<string, unknown>[] = await sql`
+    UPDATE meetings
+    SET
+      date = ${date}::date,
+      meeting_type = ${meetingType},
+      presiding = ${presiding},
+      conducting = ${conducting},
+      details = ${JSON.stringify(details)}::jsonb
+    WHERE id = ${id}
+    RETURNING id
+  `;
+
+  return rows.length > 0;
+}
+
+export async function deleteMeetingRecord(id: number): Promise<boolean> {
+  const sql = await getDatabase();
+  const rows: Record<string, unknown>[] = await sql`
+    DELETE FROM meetings
+    WHERE id = ${id}
+    RETURNING id
+  `;
+
+  return rows.length > 0;
 }
 
 export async function getMeetingsPage(
